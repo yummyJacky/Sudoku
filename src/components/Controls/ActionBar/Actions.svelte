@@ -7,6 +7,8 @@
 	import { settings } from '@sudoku/stores/settings';
 	import { keyboardDisabled } from '@sudoku/stores/keyboard';
 	import { gamePaused } from '@sudoku/stores/game';
+	import { strategyHint } from '@sudoku/stores/strategy';
+	import StrategyHint from './StrategyHint.svelte';
 
 	$: hintsAvailable = $hints > 0;
 
@@ -16,19 +18,24 @@
 				candidates.clear($cursor);
 			}
 
+			// 设置使用的策略信息
+			strategyHint.setHint('BASIC_ELIMINATION', $cursor);
 			userGrid.applyHint($cursor);
 		}
 	}
 
 	function handleUndo() {
+		strategyHint.clear();
 		userGrid.undo();
 	}
 
 	function handleRedo() {
+		strategyHint.clear();
 		userGrid.redo();
 	}
 
 	function handleReset() {
+		strategyHint.clear();
 		userGrid.reset();
 	}
 </script>
@@ -72,6 +79,8 @@
 	</button>
 
 </div>
+
+<StrategyHint />
 
 
 <style>
