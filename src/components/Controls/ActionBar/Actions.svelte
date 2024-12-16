@@ -20,7 +20,8 @@
 
 			// 设置使用的策略信息
 			strategyHint.setHint('BASIC_ELIMINATION', $cursor);
-			userGrid.applyHint($cursor);
+			// 实际调用策略
+			userGrid.applyHint($cursor,$strategyHint.strategy);
 		}
 	}
 
