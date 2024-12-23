@@ -3,23 +3,42 @@ import { strategyHint } from '@sudoku/stores/strategy';
 import { STRATEGIES } from '@sudoku/stores/strategy';
 import { cursor } from '@sudoku/stores/cursor';
 import { userGrid } from '@sudoku/stores/grid';
+import { writable } from 'svelte/store';
+import { CandidateManager, XWingStrategy } from '@sudoku/stores/strategy';
+import { onMount } from 'svelte';
+import { candidates } from '@sudoku/stores/candidates';
 
 const switchStrategy = () => {
     const strategies = Object.keys(STRATEGIES);
     const currentIndex = strategies.findIndex(key => STRATEGIES[key].name === $strategyHint.strategy.name);
     const nextIndex = (currentIndex + 1) % strategies.length;
     const nextStrategy = strategies[nextIndex];
+    
+    // 清除之前的高亮
+    candidates.clearHighlights();
+    
+    // 设置新策略
     strategyHint.setHint(nextStrategy, $cursor);
-    userGrid.applyHint($cursor,$strategyHint.strategy); 
+    
+    // 应用策略，但不消耗提示次数
+    const changes = STRATEGIES[nextStrategy].effect($userGrid);
+    if (changes && changes.length > 0) {
+        userGrid.applyStrategyChanges($userGrid, changes, candidates);
+    }
 }
 </script>
 
-{#if $strategyHint.strategy}
-    <div class="strategy-hint">
-        <div class="strategy-header">
+{#if $strategyHint && $strategyHint.strategy}
+    <div class="strategy-container">
+        <div class="strategy-content">
             <div class="strategy-name">
                 Strategy: {$strategyHint.strategy.name}
             </div>
+            <div class="strategy-desc">
+                {$strategyHint.strategy.description}
+            </div>
+        </div>
+        <div class="strategy-button">
             <button 
                 class="switch-btn"
                 on:click={switchStrategy}
@@ -27,34 +46,59 @@ const switchStrategy = () => {
                 Switch Strategy
             </button>
         </div>
-        <div class="strategy-desc">
-            {$strategyHint.strategy.description}
-        </div>
     </div>
 {/if}
 
 <style>
-    .strategy-hint {
-        @apply bg-gray-100 rounded-xl p-3 mt-3;
+    .strategy-container {
+        background-color: #f3f4f6;
+        border-radius: 0.75rem;
+        padding: 0.75rem;
+        margin-top: 0.75rem;
+        position: relative;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
     }
 
-    .strategy-header {
-        @apply flex justify-between items-center;
+    .strategy-content {
+        flex-grow: 1;
+        margin-right: 1rem;
+    }
+
+    .strategy-button {
+        flex-shrink: 0;
+        position: sticky;
+        top: 0;
+        right: 0;
     }
 
     .strategy-name {
-        @apply font-semibold text-primary text-lg;
+        font-weight: 600;
+        color: #3b82f6;
+        font-size: 1.125rem;
+        line-height: 1.75rem;
     }
 
     .strategy-desc {
-        @apply text-gray-600 text-sm mt-1;
+        color: #4b5563;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        margin-top: 0.25rem;
     }
 
     .switch-btn {
-        @apply bg-primary text-white px-3 py-1 rounded-lg text-sm transition-colors;
+        background-color: #3b82f6;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        transition: background-color 0.2s;
+        white-space: nowrap;
     }
     
     .switch-btn:hover {
-        @apply bg-blue-600;
+        background-color: #2563eb;
     }
 </style>

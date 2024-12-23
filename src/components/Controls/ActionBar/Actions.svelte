@@ -9,19 +9,25 @@
 	import { gamePaused } from '@sudoku/stores/game';
 	import { strategyHint } from '@sudoku/stores/strategy';
 	import StrategyHint from './StrategyHint.svelte';
+	import { writable } from 'svelte/store';
 
 	$: hintsAvailable = $hints > 0;
 
+	// 记录是否是第一次点击Hints按钮
+	const isFirstHintClick = writable(true);
+
 	function handleHint() {
 		if (hintsAvailable) {
-			if ($candidates.hasOwnProperty($cursor.x + ',' + $cursor.y)) {
-				candidates.clear($cursor);
+			// 如果是第一次点击，显示候选值
+			if ($isFirstHintClick) {
+				candidates.show();
+				isFirstHintClick.set(false);
 			}
 
-			// 设置使用的策略信息
-			strategyHint.setHint('BASIC_ELIMINATION', $cursor);
-			// 实际调用策略
-			userGrid.applyHint($cursor,$strategyHint.strategy);
+			// 应用当前策略
+			if ($strategyHint.strategy) {
+				userGrid.applyStrategy($cursor, $strategyHint.strategy, candidates);
+			}
 		}
 	}
 
@@ -38,6 +44,8 @@
 	function handleReset() {
 		strategyHint.clear();
 		userGrid.reset();
+		// 重置时也重置第一次点击的状态
+		isFirstHintClick.set(true);
 	}
 </script>
 
@@ -82,7 +90,6 @@
 </div>
 
 <StrategyHint />
-
 
 <style>
 	.action-buttons {

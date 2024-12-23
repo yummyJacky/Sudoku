@@ -3,18 +3,21 @@
 	import { fade } from 'svelte/transition';
 	import { SUDOKU_SIZE } from '@sudoku/constants';
 	import { cursor } from '@sudoku/stores/cursor';
+	import { candidates } from '@sudoku/stores/candidates';
 
 	export let value;
 	export let cellX;
 	export let cellY;
-	export let candidates;
-
 	export let disabled;
 	export let conflictingNumber;
 	export let userNumber;
 	export let selected;
 	export let sameArea;
 	export let sameNumber;
+
+	// 获取当前单元格的候选值
+	$: cellCandidates = $candidates.candidates[`${cellX-1},${cellY-1}`] || [];
+	$: shouldShowCandidates = $candidates.showCandidates && value === 0 && !disabled;
 
 	const borderRight = (cellX !== SUDOKU_SIZE && cellX % 3 !== 0);
 	const borderRightBold = (cellX !== SUDOKU_SIZE && cellX % 3 === 0);
@@ -37,8 +40,8 @@
 		     class:conflicting-number={conflictingNumber}>
 
 			<button class="cell-btn" on:click={cursor.set(cellX - 1, cellY - 1)}>
-				{#if candidates}
-					<Candidates {candidates} />
+				{#if shouldShowCandidates}
+					<Candidates candidates={cellCandidates} cellX={cellX} cellY={cellY} />
 				{:else}
 					<span class="cell-text">{value || ''}</span>
 				{/if}

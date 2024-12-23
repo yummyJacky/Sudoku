@@ -14,16 +14,26 @@
 	$: buttonDisabled = enteredSencode ? (!validateSencode(sencode) && !isValidSudokuUrl(sencode)) : !DIFFICULTIES.hasOwnProperty(difficulty);
 
 	function isValidSudokuUrl(url) {
-		return /^https:\/\/www\.sudokuwiki\.org\/sudoku\.htm\?bd=[0-9]{81}$/.test(url);
+		const cleanUrl = url.trim();
+		return /^https:\/\/www\.sudokuwiki\.org\/sudoku\.htm\?bd=[0-9]{81}$/.test(cleanUrl);
 	}
 
 	function extractNumbersFromUrl(url) {
-		const match = url.match(/bd=([0-9]{81})/);
+		const cleanUrl = url.trim();
+		const match = cleanUrl.match(/bd=([0-9]{81})/);
 		return match ? match[1] : null;
 	}
+
 	function handleStart() {
-		if (validateSencode(sencode)) {
-			startCustom(sencode);
+		const cleanSencode = sencode.trim();
+		if (validateSencode(cleanSencode)) {
+			startCustom(cleanSencode);
+		} else if (isValidSudokuUrl(cleanSencode)) {
+			const numbers = extractNumbersFromUrl(cleanSencode);
+			if (numbers) {
+				const gridArray = Array.from(numbers).map(Number);
+				startCustom(gridArray);
+			}
 		} else {
 			startNew(difficulty);
 		}
