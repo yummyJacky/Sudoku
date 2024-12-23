@@ -9,19 +9,78 @@
 	import { gamePaused } from '@sudoku/stores/game';
 	import { strategyHint } from '@sudoku/stores/strategy';
 	import StrategyHint from './StrategyHint.svelte';
+	import { BasicEliminationStrategy } from '../../Strategies/BasicEliminationStrategy';
+	import { NakedPairsStrategy } from '../../Strategies/NakedPairsStrategy';
 
 	$: hintsAvailable = $hints > 0;
+	$: cursorValid = $cursor.x !== null && $cursor.y !== null;
+	$: cursorCellEmpty = cursorValid && $userGrid[$cursor.y][$cursor.x] === 0;
+
+	const basicEliminationStrategy = new BasicEliminationStrategy();
+	const nakedPairsStrategy = new NakedPairsStrategy();
 
 	function handleHint() {
-		if (hintsAvailable) {
-			if ($candidates.hasOwnProperty($cursor.x + ',' + $cursor.y)) {
-				candidates.clear($cursor);
+		console.log('Hint button clicked');
+		console.log('Cursor:', $cursor);
+		console.log('Cursor cell value:', $userGrid[$cursor.y][$cursor.x]);
+		console.log('Hints available:', hintsAvailable);
+		console.log('Cursor valid:', cursorValid);
+		console.log('Cursor cell empty:', cursorCellEmpty);
+
+		if (hintsAvailable && cursorValid && cursorCellEmpty) {
+			// 使用一次提示
+			hints.useHint();
+			
+			console.log('Applying strategies...');
+			
+			// 清除之前的候选数字
+			candidates.clear($cursor);
+			
+			// 首先尝试赤裸对策略
+			console.log('Trying naked pairs strategy...');
+			let result = nakedPairsStrategy.apply($userGrid, $cursor.y, $cursor.x);
+			let currentStrategy = nakedPairsStrategy;
+			
+			// 如果赤裸对策略没有找到解，尝试基本消除策略
+			if (!result.found) {
+				console.log('Naked pairs not found, trying basic elimination...');
+				result = basicEliminationStrategy.apply($userGrid, $cursor.y, $cursor.x);
+				currentStrategy = basicEliminationStrategy;
 			}
 
 			// 设置使用的策略信息
 			strategyHint.setHint('BASIC_ELIMINATION', $cursor);
 			// 实际调用策略
 			userGrid.applyHint($cursor,$strategyHint.strategy);
+			console.log('Strategy result:', result);
+			
+			if (result.found) {
+				console.log('Strategy found values:', result.value);
+				console.log('Using strategy:', currentStrategy.name);
+				
+				strategyHint.setHint(
+					currentStrategy,
+					{ row: $cursor.y, col: $cursor.x }, 
+					result.value
+				);
+				
+				// 如果只有一个可能的值，自动填入
+				if (Array.isArray(result.value) && result.value.length === 1) {
+					userGrid.applyHint({ x: $cursor.x, y: $cursor.y }, result.value[0]);
+				}
+				// 如果有多个可能的值，更新候选数字
+				else if (Array.isArray(result.value) && result.value.length > 1) {
+					candidates.setAll($cursor, result.value);
+				}
+			} else {
+				console.log('No strategy found any values');
+				strategyHint.clear();
+			}
+		} else {
+			console.log('Cannot apply hint:');
+			console.log('- Hints available:', hintsAvailable);
+			console.log('- Cursor valid:', cursorValid);
+			console.log('- Cursor cell empty:', cursorCellEmpty);
 		}
 	}
 
@@ -38,6 +97,17 @@
 	function handleReset() {
 		strategyHint.clear();
 		userGrid.reset();
+	}
+
+	// 监听 userGrid 的变化
+	$: {
+		if ($userGrid) {
+			// 当数独板变化时，清除提示和候选数字
+			strategyHint.clear();
+			if ($cursor.x !== null && $cursor.y !== null) {
+				candidates.clear($cursor);
+			}
+		}
 	}
 </script>
 
@@ -61,7 +131,7 @@
 		</svg>
 	</button>
 
-	<button class="btn btn-round btn-badge" disabled={$keyboardDisabled || !hintsAvailable || $userGrid[$cursor.y][$cursor.x] !== 0} on:click={handleHint} title="Hints ({$hints})">
+	<button class="btn btn-round btn-badge" disabled={$keyboardDisabled || !hintsAvailable || !cursorValid || !cursorCellEmpty} on:click={handleHint} title="Hints ({$hints})">
 		<svg class="icon-outline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
 		</svg>

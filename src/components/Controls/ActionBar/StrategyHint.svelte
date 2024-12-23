@@ -30,6 +30,14 @@ const switchStrategy = () => {
         <div class="strategy-desc">
             {$strategyHint.strategy.description}
         </div>
+        {#if $strategyHint.position}
+            <div class="strategy-position">
+                Position: Row {$strategyHint.position.row + 1}, Column {$strategyHint.position.col + 1}
+                {#if $strategyHint.value}
+                    <span class="strategy-value">→ {$strategyHint.value}</span>
+                {/if}
+            </div>
+        {/if}
     </div>
 {/if}
 
@@ -56,5 +64,12 @@ const switchStrategy = () => {
     
     .switch-btn:hover {
         @apply bg-blue-600;
+    }
+    .strategy-position {
+        @apply text-gray-600 text-sm mt-1 font-mono;
+    }
+
+    .strategy-value {
+        @apply ml-2 font-bold text-primary;
     }
 </style>
