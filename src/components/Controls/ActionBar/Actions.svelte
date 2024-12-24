@@ -16,17 +16,31 @@
 	// 记录是否是第一次点击Hints按钮
 	const isFirstHintClick = writable(true);
 
-	function handleHint() {
-		if (hintsAvailable) {
-			// 如果是第一次点击，显示候选值
-			if ($isFirstHintClick) {
-				candidates.show();
-				isFirstHintClick.set(false);
-			}
+	let hintCount = 1;
+	let currentStrategy = null;
 
-			// 应用当前策略
-			if ($strategyHint.strategy) {
-				userGrid.applyStrategy($cursor, $strategyHint.strategy, candidates);
+	function handleHint() {
+		if (!hintsAvailable && !$strategyHint.strategy) {
+			return;
+		}
+
+		// 检查策略是否改变
+		console.log('candidates', $candidates.candidates);
+
+		if ($strategyHint.strategy && currentStrategy !== $strategyHint.strategy) {
+			// 新策略，清空旧的candidates并应用新策略
+			candidates.clearAll();
+			userGrid.applyStrategy($cursor, $strategyHint.strategy, candidates);
+			currentStrategy = $strategyHint.strategy;
+			candidates.show();
+			hintCount = 1;
+		} else {
+			// 仅切换显示/隐藏状态，不消耗hints
+			candidates.toggleShow();
+			if (hintCount === 0) {
+				hintCount = 1;
+			} else {
+				hintCount = 0;
 			}
 		}
 	}
