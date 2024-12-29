@@ -6,6 +6,7 @@ import { userGrid } from '@sudoku/stores/grid';
 import { writable } from 'svelte/store';
 import { CandidateManager, XWingStrategy } from '@sudoku/stores/strategy';
 import { onMount } from 'svelte';
+import { hints } from '@sudoku/stores/hints';
 import { candidates } from '@sudoku/stores/candidates';
 
 const switchStrategy = () => {
@@ -14,16 +15,19 @@ const switchStrategy = () => {
     const nextIndex = (currentIndex + 1) % strategies.length;
     const nextStrategy = strategies[nextIndex];
     
-    // Çå³ýÖ®Ç°µÄ¸ßÁÁ
+    // ï¿½ï¿½ï¿½Ö®Ç°ï¿½Ä¸ï¿½ï¿½ï¿½
     candidates.clearHighlights();
     
-    // ÉèÖÃÐÂ²ßÂÔ
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Â²ï¿½ï¿½ï¿½
     strategyHint.setHint(nextStrategy, $cursor);
     
-    // Ó¦ÓÃ²ßÂÔ£¬µ«²»ÏûºÄÌáÊ¾´ÎÊý
+    // Ó¦ï¿½Ã²ï¿½ï¿½Ô£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½
     const changes = STRATEGIES[nextStrategy].effect($userGrid);
     if (changes && changes.length > 0) {
         userGrid.applyStrategyChanges($userGrid, changes, candidates);
+    }
+    if($candidates.showCandidates){
+        hints.useHint();
     }
 }
 </script>

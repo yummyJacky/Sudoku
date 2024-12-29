@@ -19,28 +19,21 @@
 	let hintCount = 1;
 	let currentStrategy = null;
 
-	function handleHint() {
-		if (!hintsAvailable && !$strategyHint.strategy) {
-			return;
-		}
+	function handleHint()  {
+		if (hintsAvailable) {
+			if ($candidates.hasOwnProperty($cursor.x + ',' + $cursor.y)) {
+				candidates.clear($cursor);
+			}
 
-		// 检查策略是否改变
-		console.log('candidates', $candidates.candidates);
-
-		if ($strategyHint.strategy && currentStrategy !== $strategyHint.strategy) {
-			// 新策略，清空旧的candidates并应用新策略
-			candidates.clearAll();
-			userGrid.applyStrategy($cursor, $strategyHint.strategy, candidates);
-			currentStrategy = $strategyHint.strategy;
-			candidates.show();
-			hintCount = 1;
-		} else {
-			// 仅切换显示/隐藏状态，不消耗hints
+			// 设置使用的策略信息
+			if (!$strategyHint.strategy) {
+				strategyHint.setHint('BASIC_ELIMINATION', $cursor);
+			}
 			candidates.toggleShow();
-			if (hintCount === 0) {
-				hintCount = 1;
-			} else {
-				hintCount = 0;
+			// 显示时才需要应用策略
+			if($candidates.showCandidates){
+				// 实际调用策略
+				userGrid.applyStrategy($cursor, $strategyHint.strategy, candidates);
 			}
 		}
 	}
