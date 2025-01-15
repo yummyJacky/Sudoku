@@ -10,6 +10,7 @@
 	import { strategyHint } from '@sudoku/stores/strategy';
 	import StrategyHint from './StrategyHint.svelte';
 	import { writable } from 'svelte/store';
+	import { strategyScheduler } from '@sudoku/stragey/scheduler/index';
 
 	$: hintsAvailable = $hints > 0;
 
@@ -25,10 +26,9 @@
 				candidates.clear($cursor);
 			}
 
-			// 设置使用的策略信息
-			if (!$strategyHint.strategy) {
-				strategyHint.setHint('BASIC_ELIMINATION', $cursor);
-			}
+			// 利用scheduler调度策略
+			strategyScheduler.findStrategy();
+
 			candidates.toggleShow();
 			// 显示时才需要应用策略
 			if($candidates.showCandidates){
