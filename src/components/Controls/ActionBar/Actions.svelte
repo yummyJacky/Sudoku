@@ -59,7 +59,10 @@
 			}
 		}
 	}
-
+	function handleReBranch() {
+		strategyHint.clear();
+		userGrid.ReBranch();
+	}
 	function handleUndo() {
 		strategyHint.clear();
 		userGrid.undo();
@@ -79,6 +82,11 @@
 </script>
 
 <div class="action-buttons space-x-3">
+	<button class="btn btn-round" disabled={$gamePaused} title="ReBranch" on:click={handleReBranch}>
+		<svg class="icon-outline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 5v2h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357" /> />
+		</svg>
+	</button>
 
 	<button class="btn btn-round" disabled={$gamePaused} title="Undo" on:click={handleUndo}>
 		<svg class="icon-outline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
