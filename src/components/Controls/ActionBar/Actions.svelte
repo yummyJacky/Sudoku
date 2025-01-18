@@ -10,9 +10,31 @@
 	import { strategyHint } from '@sudoku/stores/strategy';
 	import StrategyHint from './StrategyHint.svelte';
 	import { writable } from 'svelte/store';
-	import { strategyScheduler } from '@sudoku/stragey/scheduler/index';
+	import { strategyScheduler } from '@sudoku/stragey/scheduler/strategy_base';
+	import { HIDDEN_SINGLE } from '@sudoku/stragey/strategies/HIDDEN_SINGLE';
+	import { NAKED_PAIRS } from '@sudoku/stragey/strategies/NAKED_PAIRS';
+	import { LAST_REMAINING_1 } from '@sudoku/stragey/strategies/LAST_REMAINING_1';
+	import { X_WING } from '@sudoku/stragey/strategies/X_WING';
+	//import { Y_WING } from '@sudoku/stragey/strategies/Y_WING';
 
 	$: hintsAvailable = $hints > 0;
+
+	// 初始化并注册所有策略
+	function initializeStrategies() {
+		// 基础策略（简单）
+		strategyScheduler.registerStrategy(LAST_REMAINING_1, 'easy');
+		strategyScheduler.registerStrategy(HIDDEN_SINGLE, 'easy');
+		
+		// 中级策略
+		strategyScheduler.registerStrategy(NAKED_PAIRS, 'medium');
+		
+		// 高级策略
+		strategyScheduler.registerStrategy(X_WING, 'hard');
+		//strategyScheduler.registerStrategy(Y_WING, 'hard');
+	}
+
+	// 组件初始化时注册策略
+	initializeStrategies();
 
 	// 记录是否是第一次点击Hints按钮
 	const isFirstHintClick = writable(true);
@@ -20,15 +42,15 @@
 	let hintCount = 1;
 	let currentStrategy = null;
 
-	function handleHint()  {
+	async function handleHint()  {
 		if (hintsAvailable) {
 			if ($candidates.hasOwnProperty($cursor.x + ',' + $cursor.y)) {
 				candidates.clear($cursor);
 			}
 
-			// 利用scheduler调度策略
-			strategyScheduler.findStrategy();
-
+			// 使用 findNextStrategy 寻找合适的策略
+			const nextStrategy = await strategyScheduler.findNextStrategy($userGrid);
+			
 			candidates.toggleShow();
 			// 显示时才需要应用策略
 			if($candidates.showCandidates){
