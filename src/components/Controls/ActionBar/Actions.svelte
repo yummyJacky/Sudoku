@@ -10,6 +10,7 @@
 	import { strategyHint } from '@sudoku/stores/strategy';
 	import StrategyHint from './StrategyHint.svelte';
 	import { writable } from 'svelte/store';
+	import { strategyScheduler } from '@sudoku/stragey/scheduler/index';
 
 	$: hintsAvailable = $hints > 0;
 
@@ -25,10 +26,9 @@
 				candidates.clear($cursor);
 			}
 
-			// 设置使用的策略信息
-			if (!$strategyHint.strategy) {
-				strategyHint.setHint('BASIC_ELIMINATION', $cursor);
-			}
+			// 利用scheduler调度策略
+			strategyScheduler.findStrategy();
+
 			candidates.toggleShow();
 			// 显示时才需要应用策略
 			if($candidates.showCandidates){
@@ -36,6 +36,11 @@
 				userGrid.applyStrategy($cursor, $strategyHint.strategy, candidates);
 			}
 		}
+	}
+
+	function handleReBarnch() {
+		strategyHint.clear();
+		userGrid.ReBarnch();
 	}
 
 	function handleUndo() {
@@ -52,11 +57,18 @@
 		strategyHint.clear();
 		userGrid.reset();
 		// 重置时也重置第一次点击的状态
-		isFirstHintClick.set(true);
+		isFirstHintClick.set(true); //d="M-15 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
 	}
 </script>
 
+
 <div class="action-buttons space-x-3">
+
+	<button class="btn btn-round" disabled={$gamePaused} title="ReBarnch" on:click={handleReBarnch}>
+		<svg class="icon-outline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 5v2h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357" /> />
+		</svg>
+	</button>
 
 	<button class="btn btn-round" disabled={$gamePaused} title="Undo" on:click={handleUndo}>
 		<svg class="icon-outline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
