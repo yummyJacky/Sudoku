@@ -1,11 +1,31 @@
-# [sudoku](https://sudoku.jonasgeiler.com)
+### 数独乐乐
+####项目我们已经部署到服务器中，可以直接通过以下地址访问：http://49.232.233.9/
+####但是对于修改的策略管理器架构，经过尝试目前无法添加到最后的项目中，在项目中仍然使用手动选策略，对于尝试的策略管理器的思路在分支strategy-chain分支下src\node_modules\@sudoku\stragey
+1. **探索回溯**
+   - 在中期汇报之前，使用栈结构实现了 `undo`、`redo` 和 `reset` 功能。此前的回溯功能只能回到最初始未填入数字的状态，缺少分支。
+   - 当前版本改为使用 DAG 结构，并补充了之前缺少的分支回溯功能。
+   - 具体实现已更新至 `develop` 分支。
 
-This is a very simple sudoku game built with Svelte and TailwindCSS.
+2. **下一步提示**
 
-Have fun! 馃槈
+3. **题目导入**
+   - 支持两种 URL 格式：
+     1. 不含候选值，仅包含 0~9 的数字。
+     2. 包含候选值状态的位图编码形式。
+   - URL 的导入支持两种位置：
+     1. 在 `welcome` 界面直接导入 URL。
+     2. 在界面左上角选择难易程度时，通过 `Enter Code` 部分导入 URL。
 
-> [!WARNING]
-> Unfortunately not all features are done yet. Specifically:
-> - Undoing/redoing moves
-> - Creating your own sudoku games
-
+4. **资源集成，策略实现**
+   - 策略按照难度划分为简单策略、中级策略和高级策略：
+     - **简单策略**：`Last_remaining`，`hidden_single`
+     - **中级策略**：`naked_pairs`
+     - **高级策略**：`X-Wing`，`Y-Wing`
+   - **Note**: 在资源调度器的设计中，尝试重新设计策略管理器的架构为类似于推理链的形式，包含行、列、九宫格三个迭代。但当前无法使用到最终项目中。
+   - 资源调度器思路如下:
+	 - StrategyPoint.js：负责表示数独中的单元格位置和候选数；提供点位的字符串表示和比较功能
+	 - StrategyGroup.js：存储策略分析的结果，管理受影响的点位和需要删除的候选数
+	 - StrategyScanner.js：提供遍历数独盘面的功能；支持扫描行、列、宫和自定义区域
+	 - StrategyScheduler.js：管理和调度不同的解题策略；提供策略注册和查找功能；维护全局调度器实例
+	 - BaseStrategy.js：所有具体策略的基类；提供通用的策略功能和接口
+	 - 在Action.svelte中对所有策略先进行注册，再调用
